@@ -12,6 +12,7 @@ FROM ${OPF_CI_BASE} as stage1
     ARG STATICCHECK_VERSION=2020.2.4
     ARG INEFFASSIGN_VERSION=2e10b26
     ARG ERRCHECK_VERSION=v1.6.0
+    ARG GHCLI_VERSION=1.10.3
 
     ENV GOPATH=/build \
         PATH=/build/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -31,6 +32,10 @@ FROM ${OPF_CI_BASE} as stage1
         https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz
     RUN tar -C /tmp -xv --strip-components=1 -f /tmp/golangci-lint.tar.gz && \
         cp /tmp/golangci-lint /build/bin/
+
+    RUN curl -L -o /tmp/ghcli.tar.gz https://github.com/cli/cli/releases/download/v${GHCLI_VERSION}/gh_${GHCLI_VERSION}_linux_amd64.tar.gz
+    RUN tar -C /tmp -xv --strip-components=1 -f /tmp/ghcli.tar.gz && \
+    	cp /tmp/bin/gh /build/bin/
 
 FROM quay.io/fedora/fedora:34-x86_64
 
