@@ -1,4 +1,4 @@
-ARG OPF_CI_BASE=quay.io/fedora/fedora:34-x86_64
+ARG OPF_CI_BASE=registry.access.redhat.com/ubi8
 
 FROM ${OPF_CI_BASE} as stage1
 
@@ -15,6 +15,7 @@ FROM ${OPF_CI_BASE} as stage1
     ARG GHCLI_VERSION=1.10.3
 
     ENV GOPATH=/build \
+    	GO111MODULE=on \
         PATH=/build/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
     WORKDIR /build/src
@@ -23,10 +24,10 @@ FROM ${OPF_CI_BASE} as stage1
         golang \
         git
 
-    RUN go install github.com/mgechev/revive@${REVIVE_VERSION}
-    RUN go install honnef.co/go/tools/cmd/staticcheck@${STATICCHECK_VERSION}
-    RUN go install github.com/gordonklaus/ineffassign@${INEFFASSIGN_VERSION}
-    RUN go install github.com/kisielk/errcheck@${ERRCHECK_VERSION}
+    RUN go get github.com/mgechev/revive@${REVIVE_VERSION}
+    RUN go get honnef.co/go/tools/cmd/staticcheck@${STATICCHECK_VERSION}
+    RUN go get github.com/gordonklaus/ineffassign@${INEFFASSIGN_VERSION}
+    RUN go get github.com/kisielk/errcheck@${ERRCHECK_VERSION}
 
     RUN curl -L -o /tmp/golangci-lint.tar.gz \
         https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-amd64.tar.gz
@@ -37,14 +38,15 @@ FROM ${OPF_CI_BASE} as stage1
     RUN tar -C /tmp -xv --strip-components=1 -f /tmp/ghcli.tar.gz && \
     	cp /tmp/bin/gh /build/bin/
 
-FROM quay.io/fedora/fedora:34-x86_64
+FROM ${OPF_CI_BASE}
 
     # In this stage, we copy over the binaries produced in stage1 and
     # then install pre-commit.
 
     ENV SUMMARY="Operate First toolchain for running pre-commit hooks." \
         DESCRIPTION="Operate First toolchain for running pre-commit hooks." \
-        PATH=/build/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        PATH=/build/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    	GO111MODULE=on
 
     LABEL summary="$SUMMARY" \
         description="$DESCRIPTION" \
@@ -60,6 +62,7 @@ FROM quay.io/fedora/fedora:34-x86_64
         python3-pip \
         golang \
         git \
+	make \
         && \
         dnf clean all
 
